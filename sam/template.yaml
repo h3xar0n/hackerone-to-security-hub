@@ -159,5 +159,4 @@ Resources:
             - Effect: Allow
               Action: securityhub:BatchImportFindings
               Resource: arn:aws:securityhub:*:*:*
-              Sid: SecurityHubImportFindingsPolicy
     
