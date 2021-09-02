@@ -57,7 +57,7 @@ def lambda_handler(event, context):
             "Label": severityRating,
             "Original": "5"
         },
-        "Title": "HackerOne: " + reportAttributes['title']
+        "Title": reportAttributes['title']
     }
 
     all_findings.append(finding)
