@@ -3,6 +3,7 @@ import json
 import uuid
 import datetime
 from utils import retry
+import logging
 
 securityhub = boto3.client('securityhub')
 
@@ -51,3 +52,10 @@ def lambda_handler(event, context):
     securityhub_cli.batch_import_findings(
         Findings=all_findings
     )
+
+def get_logger():
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    return logger
+
+logger = get_logger()
