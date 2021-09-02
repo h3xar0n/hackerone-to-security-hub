@@ -13,7 +13,9 @@ Resources:
       RestApiId: SecurityHubWebhookReceiverApiGateway
       StageName: prod
     Type: "AWS::ApiGateway::Deployment"
+    DependsOn: SecurityHubWebhookReceiverApiGateway
   SecurityHubWebhookReceiverApiGateway: 
+    DependsOn: SecurityHubWebhookReceiverFunction
     Properties: 
       Body: 
         components: 
@@ -140,6 +142,7 @@ Resources:
       Runtime: python3.7
       Timeout: 300
     Type: "AWS::Lambda::Function"
+    DependsOn: SecurityHubWebhookReceiverRole
   SecurityHubWebhookReceiverRole: 
     Properties: 
       AssumeRolePolicyDocument: 
