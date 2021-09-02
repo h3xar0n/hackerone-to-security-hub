@@ -16,7 +16,7 @@ Resources:
             Ref: AWS::StackName
           version: 1.0.0
         paths:
-          /findings:
+          /aws-hackerone-findings:
             post:
               consumes:
               - application/json
@@ -121,14 +121,14 @@ Resources:
               return logger
 
           logger = get_logger()
-      Events:
-        Api1:
-          Properties:
-            Method: POST
-            Path: /findings
-            RestApiId:
-              Ref: SecurityHubWebhookReceiverApiGateway
-          Type: Api
+#       Events:
+#         Api1:
+#           Properties:
+#             Method: POST
+#             Path: /findings
+#             RestApiId:
+#               Ref: SecurityHubWebhookReceiverApiGateway
+#           Type: Api
       Handler: index.lambda_handler
       MemorySize: 128
       Policies:
