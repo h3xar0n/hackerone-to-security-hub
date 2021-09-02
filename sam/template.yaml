@@ -133,13 +133,38 @@ Resources:
           logger = get_logger()
       Handler: index.lambda_handler
       MemorySize: 128
-      Policies:
-      - Statement:
-        - Action:
-          - securityhub:BatchImportFindings
-          Effect: Allow
-          Resource: arn:aws:securityhub:*:*:*
-          Sid: SecurityHubImportFindingsPolicy
+      Role:
+        Fn::Sub: ${SecurityHubWebhookReceiverRole.Arn}
       Runtime: python3.7
       Timeout: 300
     Type: AWS::Lambda::Function
+  
+  SecurityHubWebhookReceiverRole:
+    Type: AWS::IAM::Role
+      Properties: {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        MaxSessionDuration: Integer
+        Path: String
+        PermissionsBoundary: String
+        Policies: 
+          - Statement:
+          - Action:
+            - securityhub:BatchImportFindings
+            Effect: Allow
+            Resource: arn:aws:securityhub:*:*:*
+            Sid: SecurityHubImportFindingsPolicy
