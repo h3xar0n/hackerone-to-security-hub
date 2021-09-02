@@ -8,5 +8,5 @@ Prerequisites:
     1. Use `aws configure` to set the credentials and the region where you have Security Hub enabled 
 
 Setup
-1. `aws cloudformation deploy --template-file sam/template.yaml --stack-name <ENTER STACK NAME HERE>`
+1. `aws cloudformation deploy --template-file sam/template.yaml --stack-name <ENTER STACK NAME HERE> --capabilities CAPABILITY_IAM`
 1. `aws cloudformation describe-stacks --stack-name <ENTER STACK NAME HERE> --query "Stacks[0].Outputs[?OutputKey=='SecurityHubWebhookReceiverApiUrl'].OutputValue" --output text`
