@@ -9,7 +9,7 @@ Outputs:
 Resources:
   SecurityHubWebhookReceiverApiGateway:
     Properties:
-      DefinitionBody:
+      Body:
         openapi: "3.0.1"
         info:
           title: "HackerOne-to-Security-Hub"
