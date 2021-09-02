@@ -164,8 +164,8 @@ Resources:
     PermissionsBoundary: String
     Policies: 
       - Statement:
-      - Action:
-        - securityhub:BatchImportFindings
-        Effect: Allow
-        Resource: arn:aws:securityhub:*:*:*
-        Sid: SecurityHubImportFindingsPolicy
+        - Action:
+          - securityhub:BatchImportFindings
+          Effect: Allow
+          Resource: arn:aws:securityhub:*:*:*
+          Sid: SecurityHubImportFindingsPolicy
