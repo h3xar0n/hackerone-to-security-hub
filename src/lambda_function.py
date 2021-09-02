@@ -7,10 +7,25 @@ import logging
 
 securityhub = boto3.client('securityhub')
 
+def get_product_arn(securityhub_region):
+    PROVIDER_ACCOUNT_ID = "956882708938"
+    return "arn:aws:securityhub:%s::product/hackerone/vulnerability-intelligence" % (securityhub_region)
+
+def get_lambda_account_id(context):
+    lambda_account_id = context.invoked_function_arn.split(":")[4]
+    return lambda_account_id
+
 def lambda_handler(event, context):
+    lambda_account_id = get_lambda_account_id(context)
+    lambda_region = os.getenv("AWS_REGION")
+    logger.info("Invoking lambda_handler in Region %s AccountId %s" % (lambda_region, lambda_account_id))
+    finding_account_id = os.getenv("AWS_ACCOUNT_ID", lambda_account_id)
+    securityhub_region = os.getenv("REGION", lambda_region)
+    product_arn = get_product_arn(securityhub_region)
+    
     all_findings = []
     uid = event['data']['activity']['id']
-    fid = "us-east-1/021740258839/" + str(uid)
+    fid = str(securityhub_region) + "/" + str(finding_account_id) + "/" + str(uid)
     time = datetime.datetime.utcnow().isoformat("T") + "Z"
     data = event['data']
     reportAttributes = event['data']['report']['attributes']
@@ -20,7 +35,7 @@ def lambda_handler(event, context):
     finding = {
         "SchemaVersion": "2018-10-08",
         "RecordState": "ACTIVE",
-        "ProductArn": "arn:aws:securityhub:us-east-1::product/hackerone/vulnerability-intelligence",
+        "ProductArn": product_arn,
         "ProductFields": {
             "ProviderName": "HackerOne"  
         },
