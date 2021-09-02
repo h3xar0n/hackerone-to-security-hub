@@ -41,7 +41,7 @@ def lambda_handler(event, context):
         },
         "Description": reportAttributes['title'],
         "GeneratorId": "acme-vuln-9ab348",
-        "AwsAccountId": "{---}",
+        "AwsAccountId": finding_account_id,
         "Id": fid,
         "Types": [
             "Software and Configuration Checks/Vulnerabilities/CVE"
@@ -49,10 +49,9 @@ def lambda_handler(event, context):
         "CreatedAt": time,
         "UpdatedAt": time,
         "FirstObservedAt": time,
-        "Resources": [{
-            "Type": "AwsLambdaFunction",
-            "Id": "arn:aws:lambda:us-east-1:{---}:function:hackerone-receiver"
-        }],
+#         "Resources": [{
+#             "Type": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format-attributes.html#asff-resources"
+#         }],
         "Severity": {
             "Label": severityRating,
             "Original": "5"
