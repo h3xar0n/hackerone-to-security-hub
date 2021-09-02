@@ -8,7 +8,6 @@ import logging
 securityhub = boto3.client('securityhub')
 
 def get_product_arn(securityhub_region):
-    PROVIDER_ACCOUNT_ID = "956882708938"
     return "arn:aws:securityhub:%s::product/hackerone/vulnerability-intelligence" % (securityhub_region)
 
 def get_lambda_account_id(context):
@@ -41,7 +40,7 @@ def lambda_handler(event, context):
         },
         "Description": reportAttributes['title'],
         "GeneratorId": "acme-vuln-9ab348",
-        "AwsAccountId": finding_account_id,
+        "AwsAccountId": str(finding_account_id),
         "Id": fid,
         "Types": [
             "Software and Configuration Checks/Vulnerabilities/CVE"
@@ -49,7 +48,10 @@ def lambda_handler(event, context):
         "CreatedAt": time,
         "UpdatedAt": time,
         "FirstObservedAt": time,
-        "Resources": [],
+        "Resources": [{
+            "Type": "AwsAccount",
+            "Id": "AWS::::Account:" + str(finding_account_id)
+        }],
         "Severity": {
             "Label": severityRating,
             "Original": "5"
