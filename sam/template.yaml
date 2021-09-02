@@ -46,7 +46,7 @@ Resources:
               type: "object"
       EndpointConfiguration: EDGE
       StageName: prod
-    Type: AWS::Serverless::Api
+    Type: AWS::ApiGateway::RestApi
 #   SecurityHubWebhookReceiverFunction:
 #     Properties:
 #       Code:
