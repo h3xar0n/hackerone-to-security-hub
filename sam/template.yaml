@@ -152,11 +152,12 @@ Resources:
             Action:
               - 'sts:AssumeRole'
     Policies:
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: securityhub:BatchImportFindings
-            Resource: arn:aws:securityhub:*:*:*
-            Sid: SecurityHubImportFindingsPolicy
+      - PolicyName: SecurityHubImport
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action: securityhub:BatchImportFindings
+              Resource: arn:aws:securityhub:*:*:*
+              Sid: SecurityHubImportFindingsPolicy
     
