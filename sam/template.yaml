@@ -151,7 +151,6 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - 'sts:AssumeRole'
-    Path: /
     Policies: 
       - PolicyName: root
         PolicyDocument:
