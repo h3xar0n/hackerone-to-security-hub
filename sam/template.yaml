@@ -1,162 +1,165 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'A Serverless App that receives the HackerOne Webhook payload, reformats it to ASFF, and forwards it to AWS Security Hub'
-Outputs:
-  SecurityHubWebhookReceiverApiUrl:
-    Description: URL of your API endpoint to use as a HackerOne Webhook target
-    Value:
-      Fn::Sub: https://${SecurityHubWebhookReceiverApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/aws-hackerone-findings
-
-Resources:
-  SecurityHubWebhookReceiverApiGateway:
-    Properties:
-      Body:
-        openapi: "3.0.1"
-        info:
-          title: "HackerOne-to-Security-Hub"
-          description: "A Serverless App that receives the HackerOne Webhook payload, \
-            \ reformats it to ASFF, and forwards it to AWS Security Hub"
-          version: "2021-09-02T11:00:10Z"
-        servers:
-        - url: "https://test.execute-api.us-east-1.amazonaws.com/{basePath}"
-          variables:
-            basePath:
-              default: "/prod"
-        paths:
-          /aws-hackerone-findings:
-            post:
-              responses:
-                "200":
-                  description: "200 response"
-                  content:
-                    application/json:
-                      schema:
-                        $ref: "#/components/schemas/Empty"
-              x-amazon-apigateway-integration:
-                type: "aws"
-                httpMethod: "POST"
-                uri: 
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SecurityHubWebhookReceiverFunction.Arn}/invocations
-                responses:
-                  default:
-                    statusCode: "200"
-                passthroughBehavior: "when_no_match"
-                contentHandling: "CONVERT_TO_TEXT"
-        components:
-          schemas:
-            Empty:
-              type: "object"
-    Type: AWS::ApiGateway::RestApi
-
-  SecurityHubWebhookReceiverApiDeployment:
-    Type: AWS::ApiGateway::Deployment
+--- 
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "A Serverless App that receives the HackerOne Webhook payload, reformats it to ASFF, and forwards it to AWS Security Hub"
+Outputs: 
+  SecurityHubWebhookReceiverApiUrl: 
+    Description: "URL of your API endpoint to use as a HackerOne Webhook target"
+    Value: 
+      ? "Fn::Sub"
+      : "https://${SecurityHubWebhookReceiverApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/aws-hackerone-findings"
+Resources: 
+  SecurityHubWebhookReceiverApiDeployment: 
     Properties: 
-      RestApiId: !Ref SecurityHubWebhookReceiverApiGateway
+      RestApiId: SecurityHubWebhookReceiverApiGateway
       StageName: prod
-
-  SecurityHubWebhookReceiverFunction:
-    Properties:
-      Code:
+    Type: "AWS::ApiGateway::Deployment"
+  SecurityHubWebhookReceiverApiGateway: 
+    Properties: 
+      Body: 
+        components: 
+          schemas: 
+            Empty: 
+              type: object
+        info: 
+          description: "A Serverless App that receives the HackerOne Webhook payload,  reformats it to ASFF, and forwards it to AWS Security Hub"
+          title: HackerOne-to-Security-Hub
+          version: "2021-09-02T11:00:10Z"
+        openapi: "3.0.1"
+        paths: 
+          /aws-hackerone-findings: 
+            post: 
+              responses: 
+                ? "200"
+                : 
+                  content: 
+                    application/json: 
+                      schema: 
+                        $ref: "#/components/schemas/Empty"
+                  description: "200 response"
+              x-amazon-apigateway-integration: 
+                contentHandling: CONVERT_TO_TEXT
+                httpMethod: POST
+                passthroughBehavior: when_no_match
+                responses: 
+                  default: 
+                    statusCode: "200"
+                type: aws
+                uri: 
+                  ? "Fn::Sub"
+                  : "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SecurityHubWebhookReceiverFunction.Arn}/invocations"
+        servers: 
+          - 
+            url: "https://test.execute-api.us-east-1.amazonaws.com/{basePath}"
+            variables: 
+              basePath: 
+                default: /prod
+    Type: "AWS::ApiGateway::RestApi"
+  SecurityHubWebhookReceiverFunction: 
+    Properties: 
+      Code: 
         ZipFile: |
-          import boto3
-          import json
-          import uuid
-          import datetime
-          import logging
-
-          securityhub = boto3.client('securityhub')
-
-          def get_product_arn(securityhub_region):
-              return "arn:aws:securityhub:%s::product/hackerone/vulnerability-intelligence" % (securityhub_region)
-
-          def get_lambda_account_id(context):
-              lambda_account_id = context.invoked_function_arn.split(":")[4]
-              return lambda_account_id
-
-          def lambda_handler(event, context):
-              lambda_account_id = get_lambda_account_id(context)
-              lambda_region = os.getenv("AWS_REGION")
-              logger.info("Invoking lambda_handler in Region %s AccountId %s" % (lambda_region, lambda_account_id))
-              finding_account_id = os.getenv("AWS_ACCOUNT_ID", lambda_account_id)
-              securityhub_region = os.getenv("REGION", lambda_region)
-              product_arn = get_product_arn(securityhub_region)
-
-              all_findings = []
-              uid = event['data']['activity']['id']
-              fid = str(securityhub_region) + "/" + str(finding_account_id) + "/" + str(uid)
-              time = datetime.datetime.utcnow().isoformat("T") + "Z"
-              data = event['data']
-              reportAttributes = event['data']['report']['attributes']
-              severityRating = event['data']['report']['relationships']['severity']['data']['attributes']['rating'].upper()
-              # severityScore = str(event['data']['report']['relationships']['severity']['data']['attributes']['score'])
-
-              finding = {
-                  "SchemaVersion": "2018-10-08",
-                  "RecordState": "ACTIVE",
-                  "ProductArn": product_arn,
-                  "ProductFields": {
-                      "ProviderName": "HackerOne"  
-                  },
-                  "Description": reportAttributes['title'],
-                  "GeneratorId": "acme-vuln-9ab348",
-                  "AwsAccountId": str(finding_account_id),
-                  "Id": fid,
-                  "Types": [
-                      "Software and Configuration Checks/Vulnerabilities/CVE"
-                  ],
-                  "CreatedAt": time,
-                  "UpdatedAt": time,
-                  "FirstObservedAt": time,
-                  "Resources": [{
-                      "Type": "AwsAccount",
-                      "Id": "AWS::::Account:" + str(finding_account_id)
-                  }],
-                  "Severity": {
-                      "Label": severityRating,
-                      "Original": "5"
-                  },
-                  "Title": reportAttributes['title']
-              }
-
-              all_findings.append(finding)
-
-              securityhub_cli = boto3.client('securityhub', region_name="us-east-1")
-
-              securityhub_cli.batch_import_findings(
-                  Findings=all_findings
-              )
-
-          def get_logger():
-              logger = logging.getLogger()
-              logger.setLevel(logging.INFO)
-              return logger
-
-          logger = get_logger()
+            import boto3
+            import json
+            import uuid
+            import datetime
+            import logging
+            
+            securityhub = boto3.client('securityhub')
+            
+            def get_product_arn(securityhub_region):
+                return "arn:aws:securityhub:%s::product/hackerone/vulnerability-intelligence" % (securityhub_region)
+            
+            def get_lambda_account_id(context):
+                lambda_account_id = context.invoked_function_arn.split(":")[4]
+                return lambda_account_id
+            
+            def lambda_handler(event, context):
+                lambda_account_id = get_lambda_account_id(context)
+                lambda_region = os.getenv("AWS_REGION")
+                logger.info("Invoking lambda_handler in Region %s AccountId %s" % (lambda_region, lambda_account_id))
+                finding_account_id = os.getenv("AWS_ACCOUNT_ID", lambda_account_id)
+                securityhub_region = os.getenv("REGION", lambda_region)
+                product_arn = get_product_arn(securityhub_region)
+            
+                all_findings = []
+                uid = event['data']['activity']['id']
+                fid = str(securityhub_region) + "/" + str(finding_account_id) + "/" + str(uid)
+                time = datetime.datetime.utcnow().isoformat("T") + "Z"
+                data = event['data']
+                reportAttributes = event['data']['report']['attributes']
+                severityRating = event['data']['report']['relationships']['severity']['data']['attributes']['rating'].upper()
+                # severityScore = str(event['data']['report']['relationships']['severity']['data']['attributes']['score'])
+            
+                finding = {
+                    "SchemaVersion": "2018-10-08",
+                    "RecordState": "ACTIVE",
+                    "ProductArn": product_arn,
+                    "ProductFields": {
+                        "ProviderName": "HackerOne"  
+                    },
+                    "Description": reportAttributes['title'],
+                    "GeneratorId": "acme-vuln-9ab348",
+                    "AwsAccountId": str(finding_account_id),
+                    "Id": fid,
+                    "Types": [
+                        "Software and Configuration Checks/Vulnerabilities/CVE"
+                    ],
+                    "CreatedAt": time,
+                    "UpdatedAt": time,
+                    "FirstObservedAt": time,
+                    "Resources": [{
+                        "Type": "AwsAccount",
+                        "Id": "AWS::::Account:" + str(finding_account_id)
+                    }],
+                    "Severity": {
+                        "Label": severityRating,
+                        "Original": "5"
+                    },
+                    "Title": reportAttributes['title']
+                }
+            
+                all_findings.append(finding)
+            
+                securityhub_cli = boto3.client('securityhub', region_name="us-east-1")
+            
+                securityhub_cli.batch_import_findings(
+                    Findings=all_findings
+                )
+            
+            def get_logger():
+                logger = logging.getLogger()
+                logger.setLevel(logging.INFO)
+                return logger
+            
+            logger = get_logger()
       Handler: index.lambda_handler
       MemorySize: 128
-      Role:
-        Fn::Sub: ${SecurityHubWebhookReceiverRole.Arn}
+      Role: 
+        ? "Fn::Sub"
+        : "${SecurityHubWebhookReceiverRole.Arn}"
       Runtime: python3.7
       Timeout: 300
-    Type: AWS::Lambda::Function
-  
-  SecurityHubWebhookReceiverRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-    Policies:
-      - PolicyName: SecurityHubImport
-        PolicyDocument:
+    Type: "AWS::Lambda::Function"
+  SecurityHubWebhookReceiverRole: 
+    Policies: 
+      - 
+        PolicyDocument: 
+          Statement: 
+            - 
+              Action: "securityhub:BatchImportFindings"
+              Effect: Allow
+              Resource: "arn:aws:securityhub:*:*:*"
           Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Action: securityhub:BatchImportFindings
-              Resource: arn:aws:securityhub:*:*:*
-    
+        PolicyName: SecurityHubImport
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Statement: 
+          - 
+            Action: 
+              - "sts:AssumeRole"
+            Effect: Allow
+            Principal: 
+              Service: 
+                - lambda.amazonaws.com
+        Version: "2012-10-17"
+    Type: "AWS::IAM::Role"
