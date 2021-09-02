@@ -49,9 +49,7 @@ def lambda_handler(event, context):
         "CreatedAt": time,
         "UpdatedAt": time,
         "FirstObservedAt": time,
-#         "Resources": [{
-#             "Type": "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format-attributes.html#asff-resources"
-#         }],
+        "Resources": [],
         "Severity": {
             "Label": severityRating,
             "Original": "5"
