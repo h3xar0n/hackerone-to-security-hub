@@ -10,7 +10,7 @@ Outputs:
 Resources: 
   SecurityHubWebhookReceiverApiDeployment: 
     Properties: 
-      RestApiId: SecurityHubWebhookReceiverApiGateway
+      RestApiId: !Ref SecurityHubWebhookReceiverApiGateway
       StageName: prod
     Type: "AWS::ApiGateway::Deployment"
     DependsOn: SecurityHubWebhookReceiverApiGateway
