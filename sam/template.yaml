@@ -141,21 +141,21 @@ Resources:
   
   SecurityHubWebhookReceiverRole:
     Type: AWS::IAM::Role
-    Policies:
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: securityhub:BatchImportFindings
-            Resource: arn:aws:securityhub:*:*:*
-            Sid: SecurityHubImportFindingsPolicy
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
+      Policies:
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action: securityhub:BatchImportFindings
+              Resource: arn:aws:securityhub:*:*:*
+              Sid: SecurityHubImportFindingsPolicy
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action:
+                - 'sts:AssumeRole'
