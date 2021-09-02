@@ -44,7 +44,7 @@ Resources:
           schemas:
             Empty:
               type: "object"
-      EndpointConfiguration: EDGE
+#       EndpointConfiguration: EDGE
     Type: AWS::ApiGateway::RestApi
 #   SecurityHubWebhookReceiverFunction:
 #     Properties:
