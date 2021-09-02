@@ -9,3 +9,4 @@ Prerequisites:
 
 Setup
 1. `aws cloudformation deploy --template-file sam/template.yaml --stack-name <ENTER STACK NAME HERE>`
+1. `aws cloudformation describe-stacks --stack-name h1-test6 --query "Stacks[0].Outputs[?OutputKey=='SecurityHubWebhookReceiverApiUrl'].OutputValue" --output text`
