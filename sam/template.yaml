@@ -159,9 +159,6 @@ Resources:
         ]
       }
     }
-    MaxSessionDuration: Integer
-    Path: String
-    PermissionsBoundary: String
     Policies: 
       - Statement:
         - Action:
