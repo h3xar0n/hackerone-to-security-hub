@@ -46,7 +46,7 @@ Resources:
               type: "object"
     Type: AWS::ApiGateway::RestApi
   SecurityHubWebhookReceiverApiDeployment:
-    Type: Type: AWS::ApiGateway::Deployment
+    Type: AWS::ApiGateway::Deployment
     Properties: 
       RestApiId: !Ref SecurityHubWebhookReceiverApiGateway
       StageName: prod
