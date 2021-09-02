@@ -157,14 +157,15 @@ Resources:
             ]
           }
         ]
-      },
-      MaxSessionDuration: Integer
-      Path: String
-      PermissionsBoundary: String
-      Policies: 
-        - Statement:
-        - Action:
-          - securityhub:BatchImportFindings
-          Effect: Allow
-          Resource: arn:aws:securityhub:*:*:*
-          Sid: SecurityHubImportFindingsPolicy
+      }
+    }
+    MaxSessionDuration: Integer
+    Path: String
+    PermissionsBoundary: String
+    Policies: 
+      - Statement:
+      - Action:
+        - securityhub:BatchImportFindings
+        Effect: Allow
+        Resource: arn:aws:securityhub:*:*:*
+        Sid: SecurityHubImportFindingsPolicy
