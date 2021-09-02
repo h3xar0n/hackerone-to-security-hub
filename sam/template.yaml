@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'A Serverless App that receives HackerOne's Webhook payload, reformats it to ASFF, and forwards it to AWS Security Hub'
+Description: 'A Serverless App that receives the HackerOne Webhook payload, reformats it to ASFF, and forwards it to AWS Security Hub'
 Outputs:
   SecurityHubWebhookReceiverApiUrl:
     Description: URL of your API endpoint to use as a HackerOne Webhook target
