@@ -17,7 +17,7 @@ Resources:
             \ reformats it to ASFF, and forwards it to AWS Security Hub"
           version: "2021-09-02T11:00:10Z"
         servers:
-        - url: "https://cst2zcm84g.execute-api.us-east-1.amazonaws.com/{basePath}"
+        - url: "https://test.execute-api.us-east-1.amazonaws.com/{basePath}"
           variables:
             basePath:
               default: "/prod"
