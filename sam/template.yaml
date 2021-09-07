@@ -1,148 +1,37 @@
---- 
-AWSTemplateFormatVersion: "2010-09-09"
-Description: "A Serverless App that receives the HackerOne Webhook payload, reformats it to ASFF, and forwards it to AWS Security Hub"
-Outputs: 
-  SecurityHubWebhookReceiverApiUrl: 
-    Description: "URL of your API endpoint to use as a HackerOne Webhook target"
-    Value: 
-      ? "Fn::Sub"
-      : "https://${SecurityHubWebhookReceiverApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/aws-hackerone-findings"
-Resources: 
-  SecurityHubWebhookReceiverApiDeployment: 
-    Properties: 
-      RestApiId: !Ref SecurityHubWebhookReceiverApiGateway
-      StageName: prod
-    Type: "AWS::ApiGateway::Deployment"
-    DependsOn: SecurityHubWebhookReceiverApiGateway
-  SecurityHubWebhookReceiverApiGateway: 
-    DependsOn: SecurityHubWebhookReceiverFunction
-    Properties: 
-      Body: 
-        components: 
-          schemas: 
-            Empty: 
-              type: object
-        info: 
-          description: "A Serverless App that receives the HackerOne Webhook payload,  reformats it to ASFF, and forwards it to AWS Security Hub"
-          title: HackerOne-to-Security-Hub
-          version: "2021-09-02T11:00:10Z"
-        openapi: "3.0.1"
-        paths: 
-          /aws-hackerone-findings: 
-            post: 
-              responses: 
-                ? "200"
-                : 
-                  content: 
-                    application/json: 
-                      schema: 
-                        $ref: "#/components/schemas/Empty"
-                  description: "200 response"
-              x-amazon-apigateway-integration: 
-                contentHandling: CONVERT_TO_TEXT
-                httpMethod: POST
-                passthroughBehavior: when_no_match
-                responses: 
-                  default: 
-                    statusCode: "200"
-                type: aws
-                uri: 
-                  ? "Fn::Sub"
-                  : "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SecurityHubWebhookReceiverFunction.Arn}/invocations"
-        servers: 
-          - 
-            url: "https://test.execute-api.us-east-1.amazonaws.com/{basePath}"
-            variables: 
-              basePath: 
-                default: /prod
-    Type: "AWS::Serverless::Api"
-  SecurityHubWebhookReceiverFunction: 
-    Properties: 
-      Code: 
-        ZipFile: |
-            import boto3
-            import json
-            import uuid
-            import datetime
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  A Serverless App that receives the HackerOne Webhook payload, reformats it to ASFF, and forwards it to AWS Security Hub.
 
-            securityhub = boto3.client('securityhub')
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
 
-            def lambda_handler(event, context):
-                all_findings = []
-                uid = event['data']['activity']['id']
-                fid = "us-east-1/021740258839/" + str(uid)
-                time = datetime.datetime.utcnow().isoformat("T") + "Z"
-                data = event['data']
-                reportAttributes = event['data']['report']['attributes']
-                severityRating = event['data']['report']['relationships']['severity']['data']['attributes']['rating'].upper()
-                # severityScore = str(event['data']['report']['relationships']['severity']['data']['attributes']['score'])
-
-                finding = {
-                    "SchemaVersion": "2018-10-08",
-                    "RecordState": "ACTIVE",
-                    # "ProductArn": "arn:aws:securityhub:us-east-1:021740258839:product/hackerone/vulnerability-intelligence",
-                    "ProductArn": "arn:aws:securityhub:us-east-1::product/hackerone/vulnerability-intelligence",
-                    # "ProductArn": "arn:aws:securityhub:us-east-1:021740258839:product/021740258839/default",
-                    "ProductFields": {
-                        "ProviderName": "HackerOne"  
-                    },
-                    "Description": reportAttributes['title'],
-                    "GeneratorId": "acme-vuln-9ab348",
-                    "AwsAccountId": "021740258839",
-                    "Id": fid,
-                    "Types": [
-                        "Software and Configuration Checks/Vulnerabilities/CVE"
-                    ],
-                    "CreatedAt": time,
-                    "UpdatedAt": time,
-                    "FirstObservedAt": time,
-                    "Resources": [{
-                        "Type": "AwsAccount",
-                        "Id": "AWS::::Account:021740258839"
-                    }],
-                    "Severity": {
-                        "Label": severityRating,
-                        "Original": "5"
-                    },
-                    "Title": "HackerOne: " + reportAttributes['title']
-                }
-
-                all_findings.append(finding)
-
-                securityhub_cli = boto3.client('securityhub', region_name="us-east-1")
-
-                securityhub_cli.batch_import_findings(
-                    Findings=all_findings
-                )
-      Handler: index.lambda_handler
-      MemorySize: 128
-      Role: 
-        ? "Fn::Sub"
-        : "${SecurityHubWebhookReceiverRole.Arn}"
+Resources:
+  HackerOneForwarderFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: hackerone_forwarder/
+      Handler: app.lambda_handler
       Runtime: python3.7
-      Timeout: 300
-    Type: "AWS::Serverless::Function"
-    DependsOn: SecurityHubWebhookReceiverRole
-  SecurityHubWebhookReceiverRole: 
-    Properties: 
-      AssumeRolePolicyDocument: 
-        Statement: 
-          - 
-            Action: 
-              - "sts:AssumeRole"
-            Effect: Allow
-            Principal: 
-              Service: 
-                - lambda.amazonaws.com
-        Version: "2012-10-17"
-      Policies: 
-      - 
-        PolicyDocument: 
-          Statement: 
-            - 
-              Action: "securityhub:BatchImportFindings"
-              Effect: Allow
-              Resource: "arn:aws:securityhub:*:*:*"
-          Version: "2012-10-17"
-        PolicyName: SecurityHubImport
-    Type: "AWS::IAM::Role"
+      Events:
+        HelloWorld:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /aws-hackerone-findings
+            Method: post
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  HackerOneForwarderApi:
+    Description: "API Gateway endpoint URL for Prod stage for HackerOne Forwarder function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/aws-hackerone-findings/"
+  HackerOneForwarderFunction:
+    Description: "HackerOne Forwarder Lambda Function ARN"
+    Value: !GetAtt HackerOneForwarderFunction.Arn
+  HackerOneForwarderFunctionIamRole:
+    Description: "Implicit IAM Role created for HackerOne Forwarder function"
+    Value: !GetAtt HackerOneForwarderFunctionRole.Arn
