@@ -121,7 +121,7 @@ Resources:
         : "${SecurityHubWebhookReceiverRole.Arn}"
       Runtime: python3.7
       Timeout: 300
-    Type: "AWS::Lambda::Function"
+    Type: "AWS::Serverless::Function"
     DependsOn: SecurityHubWebhookReceiverRole
   SecurityHubWebhookReceiverRole: 
     Properties: 
