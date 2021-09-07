@@ -2,8 +2,8 @@ import boto3
 import json
 import uuid
 import datetime
-from utils import retry
 import logging
+import os
 
 securityhub = boto3.client('securityhub')
 
@@ -15,16 +15,12 @@ def get_lambda_account_id(context):
     return lambda_account_id
 
 def lambda_handler(event, context):
-    lambda_account_id = get_lambda_account_id(context)
-    lambda_region = os.getenv("AWS_REGION")
-    logger.info("Invoking lambda_handler in Region %s AccountId %s" % (lambda_region, lambda_account_id))
-    finding_account_id = os.getenv("AWS_ACCOUNT_ID", lambda_account_id)
-    securityhub_region = os.getenv("REGION", lambda_region)
-    product_arn = get_product_arn(securityhub_region)
-    
+    finding_account_id = get_lambda_account_id(context)
+    finding_region = os.environ['AWS_REGION']
+    product_arn = "arn:aws:securityhub:" + finding_region + "::product/hackerone/vulnerability-intelligence"
     all_findings = []
     uid = event['data']['activity']['id']
-    fid = str(securityhub_region) + "/" + str(finding_account_id) + "/" + str(uid)
+    fid = str(finding_region) + "/" + str(finding_account_id) + "/" + str(uid)
     time = datetime.datetime.utcnow().isoformat("T") + "Z"
     data = event['data']
     reportAttributes = event['data']['report']['attributes']
