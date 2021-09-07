@@ -55,7 +55,7 @@ Resources:
             variables: 
               basePath: 
                 default: /prod
-    Type: "AWS::ApiGateway::RestApi"
+    Type: "AWS::Serverless::Api"
   SecurityHubWebhookReceiverFunction: 
     Properties: 
       Code: 
