@@ -1,53 +1,54 @@
 import boto3
 import json
-import uuid
 import datetime
+import os
 
 securityhub = boto3.client('securityhub')
 
 def lambda_handler(event, context):
     all_findings = []
+    finding_account_id = context.invoked_function_arn.split(":")[4]
+    finding_account_region = os.environ['AWS_REGION']
     uid = event['data']['activity']['id']
-    fid = "us-east-1/021740258839/" + str(uid)
-    time = datetime.datetime.utcnow().isoformat("T") + "Z"
-    data = event['data']
+    fid = finding_account_region + "/" + finding_account_id + "/" + uid
+    updatedAt = datetime.datetime.utcnow().isoformat("T") + "Z"
     reportAttributes = event['data']['report']['attributes']
+    reporter = event['data']['report']['relationships']['reporter']['data']['attributes']['username']
     severityRating = event['data']['report']['relationships']['severity']['data']['attributes']['rating'].upper()
-    # severityScore = str(event['data']['report']['relationships']['severity']['data']['attributes']['score'])
+    severityScore = str(event['data']['report']['relationships']['severity']['data']['attributes']['score'])
+    createdAt = event['data']['activity']['attributes']['created_at']
 
     finding = {
         "SchemaVersion": "2018-10-08",
         "RecordState": "ACTIVE",
-        # "ProductArn": "arn:aws:securityhub:us-east-1:021740258839:product/hackerone/vulnerability-intelligence",
-        "ProductArn": "arn:aws:securityhub:us-east-1::product/hackerone/vulnerability-intelligence",
-        # "ProductArn": "arn:aws:securityhub:us-east-1:021740258839:product/021740258839/default",
+        "ProductArn": "arn:aws:securityhub:" + finding_account_region + "::product/hackerone/vulnerability-intelligence",
         "ProductFields": {
             "ProviderName": "HackerOne"  
         },
         "Description": reportAttributes['title'],
-        "GeneratorId": "acme-vuln-9ab348",
-        "AwsAccountId": "021740258839",
+        "GeneratorId": reporter,
+        "AwsAccountId": finding_account_id,
         "Id": fid,
         "Types": [
             "Software and Configuration Checks/Vulnerabilities/CVE"
         ],
-        "CreatedAt": time,
-        "UpdatedAt": time,
-        "FirstObservedAt": time,
+        "CreatedAt": createdAt,
+        "UpdatedAt": updatedAt,
+        "FirstObservedAt": createdAt,
         "Resources": [{
             "Type": "AwsAccount",
-            "Id": "AWS::::Account:021740258839"
+            "Id": "AWS::::Account:" + finding_account_id
         }],
         "Severity": {
             "Label": severityRating,
-            "Original": "5"
+            "Original": severityScore
         },
-        "Title": "HackerOne: " + reportAttributes['title']
+        "Title": reportAttributes['title']
     }
 
     all_findings.append(finding)
 
-    securityhub_cli = boto3.client('securityhub', region_name="us-east-1")
+    securityhub_cli = boto3.client('securityhub', region_name=finding_account_region)
 
     securityhub_cli.batch_import_findings(
         Findings=all_findings
@@ -56,6 +57,6 @@ def lambda_handler(event, context):
     return {
         "statusCode": 200,
         "body": json.dumps({
-            "message": "Finding added to Security Hub."
+            "message": "Finding in " + finding_account_region + " " + finding_account_id + " added to Security Hub."
         }),
     }
