@@ -17,6 +17,7 @@ def lambda_handler(event, context):
     severityRating = event['data']['report']['relationships']['severity']['data']['attributes']['rating'].upper()
     severityScore = str(event['data']['report']['relationships']['severity']['data']['attributes']['score'])
     createdAt = event['data']['activity']['attributes']['created_at']
+    reportUrl = "https://hackerone.com/reports/" + uid
 
     finding = {
         "SchemaVersion": "2018-10-08",
@@ -25,7 +26,7 @@ def lambda_handler(event, context):
         "ProductFields": {
             "ProviderName": "HackerOne"  
         },
-        "Description": reportAttributes['title'],
+        "Description": "Once logged in to HackerOne, see more at " + reportUrl,
         "GeneratorId": reporter,
         "AwsAccountId": finding_account_id,
         "Id": fid,
