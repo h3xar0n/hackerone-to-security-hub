@@ -5,17 +5,27 @@ import os
 
 securityhub = boto3.client('securityhub')
 
+def getSeverityScore(rating):
+    if rating == 'CRITICAL':
+        return "10"
+    elif rating == 'HIGH':
+        return "7"
+    elif rating == 'MEDIUM':        
+        return "5"
+    else:
+        return "1"
+
 def lambda_handler(event, context):
     all_findings = []
     finding_account_id = context.invoked_function_arn.split(":")[4]
     finding_account_region = os.environ['AWS_REGION']
-    uid = event['data']['activity']['id']
+    uid = event['data']['report']['id']
     fid = finding_account_region + "/" + finding_account_id + "/" + uid
     updatedAt = datetime.datetime.utcnow().isoformat("T") + "Z"
     reportAttributes = event['data']['report']['attributes']
     reporter = event['data']['report']['relationships']['reporter']['data']['attributes']['username']
     severityRating = event['data']['report']['relationships']['severity']['data']['attributes']['rating'].upper()
-    severityScore = str(event['data']['report']['relationships']['severity']['data']['attributes']['score'])
+    severityScore = getSeverityScore(severityRating)
     createdAt = event['data']['activity']['attributes']['created_at']
     reportUrl = "https://hackerone.com/reports/" + uid
 
