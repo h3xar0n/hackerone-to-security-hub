@@ -52,3 +52,10 @@ def lambda_handler(event, context):
     securityhub_cli.batch_import_findings(
         Findings=all_findings
     )
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({
+            "message": "Finding added to Security Hub."
+        }),
+    }

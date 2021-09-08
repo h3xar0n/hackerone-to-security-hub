@@ -9,38 +9,57 @@ Globals:
     Timeout: 3
 
 Resources:
+  HackerOneForwarderApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      EndpointConfiguration: EDGE
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          title:
+            Ref: AWS::StackName
+          description: API endpoint for invoking HackerOneForwarderFunction
+          version: 1.0.0
+        paths:
+          /aws-hackerone-findings:
+            post:
+              responses:
+                "200":
+                  description: "200 response"
+                  content: {}
+              x-amazon-apigateway-integration:
+                type: "aws"
+                httpMethod: "POST"
+                uri: 
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HackerOneForwarderFunction.Arn}/invocations
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                contentHandling: "CONVERT_TO_TEXT"
+
   HackerOneForwarderFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      AssumeRolePolicyDocument: 
-        Statement: 
-          - 
-            Action: 
-              - "sts:AssumeRole"
-            Effect: Allow
-            Principal: 
-              Service: 
-                - lambda.amazonaws.com
-        Version: "2012-10-17"
       Policies: 
-      - 
-        PolicyDocument: 
-          Statement: 
-            - 
-              Action: "securityhub:BatchImportFindings"
-              Effect: Allow
-              Resource: "arn:aws:securityhub:*:*:*"
-          Version: "2012-10-17"
-        PolicyName: SecurityHubImport
+      - Statement:
+        - Action:
+          - securityhub:BatchImportFindings
+          Effect: Allow
+          Resource: arn:aws:securityhub:*:*:*
+          Sid: SecurityHubImportFindingsPolicy
       CodeUri: hackerone_forwarder/
       Handler: app.lambda_handler
       Runtime: python3.7
       Events:
-        HelloWorld:
+        HackerOneForward:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /aws-hackerone-findings
-            Method: post
+            Method: POST
+            RestApiId:
+              Ref: HackerOneForwarderApi
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
@@ -48,7 +67,7 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   HackerOneForwarderApi:
     Description: "API Gateway endpoint URL for Prod stage for HackerOne Forwarder function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/aws-hackerone-findings/"
+    Value: !Sub "https://${HackerOneForwarderApi}.execute-api.${AWS::Region}.amazonaws.com/prod/aws-hackerone-findings/"
   HackerOneForwarderFunction:
     Description: "HackerOne Forwarder Lambda Function ARN"
     Value: !GetAtt HackerOneForwarderFunction.Arn
