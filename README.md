@@ -10,8 +10,6 @@ Prerequisites:
 
 Setup
 
-1. `aws cloudformation package --template-file template.yaml --output-template-file packaged-template.yaml --s3-bucket <BUCKET_NAME>`
-
-1. `aws cloudformation deploy --template-file packaged-template.yaml --stack-name <STACK_NAME> --capabilities CAPABILITY_IAM`
-
-1. `aws cloudformation describe-stacks --stack-name <ENTER STACK NAME HERE> --query "Stacks[0].Outputs[?OutputKey=='HackerOneForwarderUrl'].OutputValue" --output text`
+1. `chmod 700 ./build.sh`
+1. `./build.sh`
+1. Aim your HackerOne Webhook at the URL that appears at the end.
